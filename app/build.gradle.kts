@@ -58,6 +58,7 @@ dependencies {
 
     // Charts
     implementation("com.github.PhilJay:MPAndroidChart:3.1.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Tests
     testImplementation(libs.junit)

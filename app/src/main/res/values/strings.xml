@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">ExpenseMate</string>
+    <string-array name="expense_categories">
+        <item>Храна</item>
+        <item>Транспорт</item>
+        <item>Развлечения</item>
+        <item>Други</item>
+    </string-array>
+    <string name="add_expense">Добавяне на разход</string>
 </resources>

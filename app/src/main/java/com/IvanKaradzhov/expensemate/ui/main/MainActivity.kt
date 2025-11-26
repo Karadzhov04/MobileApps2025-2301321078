@@ -4,30 +4,24 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
-import com.IvanKaradzhov.expensemate.data.model.Expense
 import com.IvanKaradzhov.expensemate.databinding.ActivityMainBinding
-import com.IvanKaradzhov.expensemate.ui.add.AddExpenseActivity
 import com.IvanKaradzhov.expensemate.ui.adapter.ExpenseAdapter
+import com.IvanKaradzhov.expensemate.ui.add.AddExpenseActivity
 import com.IvanKaradzhov.expensemate.ui.viewmodel.ExpenseViewModel
+import com.IvanKaradzhov.expensemate.data.model.Expense
+import java.sql.Date
 
 class MainActivity : AppCompatActivity() {
-
-    // ViewBinding
     private lateinit var binding: ActivityMainBinding
-
-    // ViewModel (MVVM)
     private val viewModel: ExpenseViewModel by viewModels()
 
-    // ActivityResult launcher – за връщане на резултат от AddExpenseActivity
-    private val addLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
+    private val addLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val data = result.data ?: return@registerForActivityResult
-
+            val id = data.getLongExtra(AddExpenseActivity.EXTRA_ID, -1L)
             val title = data.getStringExtra(AddExpenseActivity.EXTRA_TITLE) ?: return@registerForActivityResult
             val amount = data.getDoubleExtra(AddExpenseActivity.EXTRA_AMOUNT, 0.0)
             val category = data.getStringExtra(AddExpenseActivity.EXTRA_CATEGORY) ?: "Други"
@@ -35,6 +29,7 @@ class MainActivity : AppCompatActivity() {
             val note = data.getStringExtra(AddExpenseActivity.EXTRA_NOTE)
 
             val expense = Expense(
+                id = if (id != -1L) id else 0, // ако има id → редакция
                 title = title,
                 amount = amount,
                 category = category,
@@ -42,46 +37,78 @@ class MainActivity : AppCompatActivity() {
                 note = note
             )
 
-            // добавяме в базата чрез ViewModel
-            viewModel.addExpense(expense)
-
-            Snackbar.make(binding.root, "Добави се успешно ✅", Snackbar.LENGTH_SHORT).show()
+            if (id != -1L) {
+                viewModel.updateExpense(expense)
+            } else {
+                viewModel.addExpense(expense)
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Зареждаме layout чрез ViewBinding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Настройваме RecyclerView и адаптера
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = "💸Track Your Flow"
+
         val adapter = ExpenseAdapter { expense ->
-            // TODO: тук ще направим екран за редакция/изтриване по-късно
-            Snackbar.make(binding.root, "Избра: ${expense.title}", Snackbar.LENGTH_SHORT).show()
+            // При клик върху елемент → избор дали да редактираш или изтриеш
+            AlertDialog.Builder(this)
+                .setTitle("Опции за разход")
+                .setItems(arrayOf("Редактирай", "Изтрий", "Сподели")) { _, which ->
+                    when (which) {
+                        0 -> { // Редакция
+                            val intent = Intent(this, AddExpenseActivity::class.java).apply {
+                                putExtra(AddExpenseActivity.EXTRA_ID, expense.id)
+                                putExtra(AddExpenseActivity.EXTRA_TITLE, expense.title)
+                                putExtra(AddExpenseActivity.EXTRA_AMOUNT, expense.amount)
+                                putExtra(AddExpenseActivity.EXTRA_CATEGORY, expense.category)
+                                putExtra(AddExpenseActivity.EXTRA_DATE, expense.date)
+                                putExtra(AddExpenseActivity.EXTRA_NOTE, expense.note)
+                            }
+                            addLauncher.launch(intent)
+                        }
+
+                        1 -> { // Изтриване
+                            viewModel.deleteExpense(expense)
+                        }
+
+                        2 -> {
+                            var shareIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Разход: ${expense.title}\n" +
+                                            "Сума: ${expense.amount} лв\n" +
+                                            "Категория: ${expense.category}\n" +
+                                            "Дата: ${Date(expense.date)}\n" +
+                                            "Бележка: ${expense.note ?: ""}"
+                                )
+                                type = "text/plain"
+                            }
+                            this.startActivity(Intent.createChooser(shareIntent, "Сподели чрез"))
+                        }
+                    }
+                }.show()
         }
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
 
-        // Наблюдаваме LiveData от ViewModel
         viewModel.expenses.observe(this) { list ->
             adapter.submitList(list)
             binding.swipeRefresh.isRefreshing = false
         }
 
-        // FAB бутон – отваря AddExpenseActivity
         binding.fabAdd.setOnClickListener {
-            val intent = Intent(this, AddExpenseActivity::class.java)
-            addLauncher.launch(intent)
+            val i = Intent(this, AddExpenseActivity::class.java)
+            addLauncher.launch(i)
         }
 
-        // SwipeRefresh (ако искаш да презареждаш)
         binding.swipeRefresh.setOnRefreshListener {
             binding.swipeRefresh.isRefreshing = true
-            // Room LiveData автоматично се обновява, така че само изключваме
-            binding.swipeRefresh.isRefreshing = false
         }
     }
 }

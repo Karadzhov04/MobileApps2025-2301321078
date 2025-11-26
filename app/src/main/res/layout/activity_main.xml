@@ -8,13 +8,24 @@
     android:layout_height="match_parent"
     tools:context=".ui.main.MainActivity">
 
-    <!-- SwipeRefreshLayout за презареждане на списъка -->
+    <!-- Заглавие / Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:title="💸Track Your Flow"
+        android:titleTextColor="@android:color/white"
+        app:titleCentered="true"
+        app:popupTheme="@style/ThemeOverlay.Material3.Dark.ActionBar" />
+
+    <!-- Swipe-to-refresh + списък с разходи -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize">
 
-        <!-- RecyclerView за показване на разходите -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
@@ -24,16 +35,15 @@
             tools:listitem="@layout/item_expense"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Floating Action Button за добавяне на разход -->
+    <!-- FAB за добавяне на нов разход -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
         android:contentDescription="@string/add_expense"
         app:srcCompat="@android:drawable/ic_input_add"
-        app:tint="@android:color/white"
-        app:layout_anchorGravity="bottom|end"
-        android:layout_margin="24dp"
-        app:layout_anchor="@id/rootLayout" />
+        app:tint="@android:color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

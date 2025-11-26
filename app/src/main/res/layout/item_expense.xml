@@ -59,6 +59,15 @@
                 android:layout_marginStart="16dp"
                 android:text="01.11.2025"
                 android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tvNote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:textSize="13sp"
+                android:visibility="gone"/>
+
         </LinearLayout>
 
     </LinearLayout>

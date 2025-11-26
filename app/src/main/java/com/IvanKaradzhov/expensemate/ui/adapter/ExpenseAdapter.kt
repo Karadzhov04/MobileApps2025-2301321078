@@ -29,6 +29,7 @@ class ExpenseAdapter(private val onClick: (Expense) -> Unit) :
         private val tvAmount: TextView = itemView.findViewById(R.id.tvAmount)
         private val tvCategory: TextView = itemView.findViewById(R.id.tvCategory)
         private val tvDate: TextView = itemView.findViewById(R.id.tvDate)
+        private val tvNote: TextView = itemView.findViewById(R.id.tvNote) // добавено
         private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
         private var current: Expense? = null
@@ -39,6 +40,15 @@ class ExpenseAdapter(private val onClick: (Expense) -> Unit) :
             tvAmount.text = String.format(Locale.getDefault(), "%.2f лв", expense.amount)
             tvCategory.text = expense.category
             tvDate.text = dateFormat.format(Date(expense.date))
+
+            // Бележка – показва се само ако има текст
+            if (!expense.note.isNullOrEmpty()) {
+                tvNote.text = expense.note
+                tvNote.visibility = View.VISIBLE
+            } else {
+                tvNote.visibility = View.GONE
+            }
+
             itemView.setOnClickListener { current?.let { onClick(it) } }
         }
     }
